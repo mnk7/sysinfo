@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include <getopt.h>
 #include <chrono>
 #include <thread>
@@ -147,22 +148,28 @@ std::vector<double> readMemoryInfo() {
 }
 
 
-void updateGraph(double baseclock) {
+void updateGraph(double baseclock, double &max_frequency) {
     // get terminal size
     struct winsize size;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
 
     auto data = readCPUFrequency();
+    for(decltype(data.size()) i = 0; i < data.size(); ++i) {
+        if(data[i] > max_frequency) {
+            max_frequency = data[i];
+        }
+    }
+
     clear();
     gotoxy(0, 0);
     changeColor(0);
 
-    // still available columns after label: (22 columns)
+    // still available columns after label: (25 columns)
     uint available_columns = 5;
-    if(size.ws_col > 25) {
-        available_columns = size.ws_col - 21;
+    if(size.ws_col > 30) {
+        available_columns = size.ws_col - 25;
     }
-    double scaling_factor = available_columns / (3 * baseclock);
+    double scaling_factor = available_columns / max_frequency;
 
     for(decltype(data.size()) core = 0; core < data.size(); ++core) {
         gotoxy(0, core + 2);
@@ -171,28 +178,31 @@ void updateGraph(double baseclock) {
         printf("[");
 
         changeColor(5);
-        // The whole area should be 3x baseclock
-        for(uint bar = 0; bar < static_cast<uint>(data[core] * scaling_factor); ++bar) {
+        // The whole area should be max_frequency
+        uint number_bars = static_cast<uint>(data[core] * scaling_factor);
+        for(uint bar = 0; bar < number_bars; ++bar) {
             if(bar >= baseclock * scaling_factor) {
                 changeColor(2);
             }
             printf("|");
         }
 
-        printf("\n");
+        changeColor(1);
+        for(uint blank = number_bars; blank < max_frequency * scaling_factor; ++blank) {
+            printf(" ");
+        }
+        printf("]\n");
         changeColor(0);
     }
 
 
     uint current_line = data.size() + 2;
-    // we now need a column for a ']' at the end
-    available_columns -= 1;
 
     data = readMemoryInfo();
     if(data[0] > data[4]) {
-        scaling_factor = available_columns / (1.5 * data[0]);
+        scaling_factor = available_columns / data[0];
     } else {
-        scaling_factor = available_columns / (1.5 * data[4]);
+        scaling_factor = available_columns / data[4];
     }
 
     // print RAM info
@@ -228,7 +238,9 @@ void updateGraph(double baseclock) {
 
     changeColor(1);
     // fill the bracket to show the free amount of memory
-    for(uint bar = 0; bar < static_cast<uint>((data[0] + data[0] - data[2] - data[3]) * scaling_factor); ++bar) {
+    for(uint bar = 0; bar < static_cast<uint>(data[0] * scaling_factor)
+                            - static_cast<uint>((data[0] - data[2]) * scaling_factor)
+                            - static_cast<uint>(data[3] * scaling_factor); ++bar) {
         printf(" ");
     }
     printf("]\n");
@@ -269,7 +281,9 @@ void updateGraph(double baseclock) {
 
         changeColor(1);
         // fill the bracket to show the free amount of memory
-        for(uint bar = 0; bar < static_cast<uint>((data[4] + data[4] - data[5] - data[6]) * scaling_factor); ++bar) {
+        for(uint bar = 0; bar < static_cast<uint>(data[4] * scaling_factor)
+                                - static_cast<uint>((data[4] - data[5]) * scaling_factor)
+                                - static_cast<uint>(data[6] * scaling_factor); ++bar) {
             printf(" ");
         }
         printf("]\n");
@@ -282,6 +296,7 @@ void updateGraph(double baseclock) {
 int main(int argc, char*argv[]) {
     uint update_interval_ms = 1000;
     double baseclock = getCPUMaxBaseclock();
+    double max_frequency = baseclock;
 
     int c;
     while ((c = getopt (argc, argv, "u:")) != -1) {
@@ -297,7 +312,7 @@ int main(int argc, char*argv[]) {
     clear();
 
     while(true) {
-        updateGraph(baseclock);
+        updateGraph(baseclock, max_frequency);
         std::this_thread::sleep_for(std::chrono::milliseconds(update_interval_ms));
     }
 }
