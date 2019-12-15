@@ -72,21 +72,25 @@ double getCPUMaxBaseclock() {
 
     cpuinfo.close();
 
-    return std::stod(in) / 1000;
+    return std::stod(in);
 }
 
 
 std::vector<double> readCPUFrequency() {
     std::vector<double> frequencies;
 
-    std::ifstream cpuinfo;
-    cpuinfo.open("/proc/cpuinfo", std::ifstream::in);
-
+    int core = 0;
     std::string in;
-    while(std::getline(cpuinfo, in)) {
-        if(in.substr(0, 7) == "cpu MHz") {
-            frequencies.push_back(std::stod(in.substr(11)));
-        }
+    std::ifstream cpuinfo;
+    cpuinfo.open("/sys/devices/system/cpu/cpu" + std::to_string(core) + "/cpufreq/scaling_cur_freq", std::ifstream::in);
+
+    while(!cpuinfo.fail()) {
+        std::getline(cpuinfo, in);
+        frequencies.push_back(std::stod(in));
+
+        ++core;
+        cpuinfo.close();
+        cpuinfo.open("/sys/devices/system/cpu/cpu" + std::to_string(core) + "/cpufreq/scaling_cur_freq", std::ifstream::in);
     }
 
     cpuinfo.close();
