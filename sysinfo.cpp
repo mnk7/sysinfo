@@ -166,7 +166,7 @@ void updateGraph(double baseclock) {
 
     for(decltype(data.size()) core = 0; core < data.size(); ++core) {
         gotoxy(0, core + 2);
-        printf("  CPU %lu:   %d MHz ", core, static_cast<uint>(data[core]));
+        printf("  CPU %lu:   %d MHz ", core, static_cast<uint>(data[core] / 1e3));
         changeColor(1);
         printf("[");
 
