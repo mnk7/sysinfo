@@ -185,7 +185,11 @@ void updateGraph(double baseclock) {
     available_columns -= 1;
 
     data = readMemoryInfo();
-    scaling_factor = available_columns / (1.5 * data[0]);
+    if(data[0] > data[4]) {
+        scaling_factor = available_columns / (1.5 * data[0]);
+    } else {
+        scaling_factor = available_columns / (1.5 * data[4]);
+    }
 
     // print RAM info
     gotoxy(0, current_line + 1);
