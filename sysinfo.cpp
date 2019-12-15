@@ -164,10 +164,10 @@ void updateGraph(double baseclock, double &max_frequency) {
     gotoxy(0, 0);
     changeColor(0);
 
-    // still available columns after label: (25 columns)
+    // still available columns after label: (23 columns)
     uint available_columns = 5;
     if(size.ws_col > 30) {
-        available_columns = size.ws_col - 25;
+        available_columns = size.ws_col - 23;
     }
     double scaling_factor = available_columns / max_frequency;
 
