@@ -209,7 +209,9 @@ void updateGraph(double baseclock, double &max_frequency) {
     gotoxy(0, current_line + 1);
     uint used_memory = static_cast<uint>((data[0] - data[2]) / 1e3);
     // take care of proper alignment:
-    if(used_memory < 1e2) {
+    if(used_memory < 10) {
+        printf("  MEMORY:      %d MB ", used_memory);
+    } else if(used_memory < 1e2) {
         printf("  MEMORY:     %d MB ", used_memory);
     } else if(used_memory < 1e3) {
         printf("  MEMORY:    %d MB ", used_memory);
@@ -252,7 +254,9 @@ void updateGraph(double baseclock, double &max_frequency) {
         gotoxy(0, current_line + 2);
         used_memory = static_cast<uint>((data[4] - data[5]) / 1e3);
         // take care of proper alignment:
-        if(used_memory < 1e2) {
+        if(used_memory < 10) {
+            printf("  SWAP:        %d MB ", used_memory);
+        } else if(used_memory < 1e2) {
             printf("  SWAP:       %d MB ", used_memory);
         } else if(used_memory < 1e3) {
             printf("  SWAP:      %d MB ", used_memory);
